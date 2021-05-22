@@ -12,29 +12,39 @@ import os
 import pathlib
 import pandas as pd 
 import keras
-from tensorflow.python.keras import backend 
-from tensorflow.compat.v1 import ConfigProto
-from tensorflow.compat.v1 import InteractiveSession
+# from tensorflow.python.keras import backend 
+# from tensorflow.compat.v1 import ConfigProto
+# from tensorflow.compat.v1 import Session
 from keras.optimizers import SGD
 from keras.optimizers import Adam
 import datasetPreparation
 import matplotlib.pyplot as plt
 import datasetPreparation as dp 
 from keras.regularizers import l2
-config = ConfigProto()
-config.gpu_options.allow_growth = True
-session = InteractiveSession(config=config)
-sess = backend.get_session()
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=3048)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
+
 path_train = 'images/colorization/color/'
 path_test = 'images/validation/'
-csv_file = r'filenames.csv'
-
+csv_file = r'filename.csv'
+csv_file1 = r'filenames_test.csv'
 train_data = dp.load_samples(csv_file)
-
+test_data = dp.load_samples(csv_file1)
 num_train = len(train_data)
-BATCH_SIZE=18
+num_test = len(test_data)
+BATCH_SIZE=24
 ds_train =  dp.generator(train_data,batch_size=BATCH_SIZE)
-
+ds_test = dp.generator(test_data,batch_size=BATCH_SIZE)
 
 # for batch_idx,(X_batch,Y_batch) in enumerate(ds_train):
 # 	count =0
@@ -73,43 +83,104 @@ lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
 my_callbacks = [
 	tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.2, patience=2,  mode="auto",verbose=1)
 	]
+# model = Sequential() 
 # #Encoder
+###################################################### MODEL 1 ###################################################
+# model.add(Conv2D(117, (3, 3), activation='relu', padding='same',strides=2,input_shape=(256, 256, 1)))
 
-model = Sequential() 
-model.add(Conv2D(117, (3, 3), activation='relu', padding='same',strides=2,input_shape=(256, 256, 1)))
-model.add(Conv2D(46, (3, 3), activation='relu', padding='same'))
-model.add(Conv2D(118, (3,3), activation='relu', padding='same', strides=2))
-model.add(BatchNormalization())
-model.add(Conv2D(240, (3,3), activation='relu', padding='same'))
-model.add(Conv2D(135, (3,3), activation='relu', padding='same', strides=2))
-model.add(Conv2D(37, (3,3), activation='relu', padding='same'))
-model.add(BatchNormalization())
-model.add(Conv2D(472, (3,3), activation='relu', padding='same'))
-model.add(Conv2D(75, (3,3), activation='relu', padding='same'))
-#Decoder
+# model.add(Conv2D(46, (3, 3), activation='relu', padding='same'))
 
-model.add(Conv2D(87, (3,3), activation='relu', padding='same'))
-model.add(BatchNormalization())
-model.add(UpSampling2D((2, 2)))
-model.add(Conv2D(54, (3,3), activation='relu', padding='same'))
-model.add(Conv2D(128, (3,3), activation='relu', padding='same',dilation_rate=(2,2)))
-model.add(UpSampling2D((2, 2)))
-model.add(Conv2D(26, (3,3), activation='relu', padding='same',dilation_rate=(2,2)))
-model.add(BatchNormalization())
+# model.add(Conv2D(118, (3,3), activation='relu', padding='same', strides=2))
+# # model.add(BatchNormalization())
 
-model.add(Conv2D(11, (3,3), activation='relu', padding='same',dilation_rate=(2,2)))
+# model.add(Conv2D(240, (3,3), activation='relu', padding='same'))
+# model.add(Conv2D(135, (3,3), activation='relu', padding='same', strides=2))
+# model.add(Conv2D(37, (3,3), activation='relu', padding='same'))
+# model.add(Dropout(0.25))
+# # model.add(BatchNormalization())
+# model.add(Conv2D(472, (3,3), activation='relu', padding='same'))
+# model.add(Conv2D(75, (3,3), activation='relu', padding='same'))
 
-model.add(Conv2D(2, (3, 3), activation='tanh', padding='same',dilation_rate=(2,2)))
-model.add(UpSampling2D((2, 2)))
-model.add(BatchNormalization())
+# #Decoder
+
+# model.add(Conv2D(87, (3,3), activation='relu', padding='same'))
+# # model.add(BatchNormalization())
+
+# model.add(UpSampling2D((2, 2)))
+# model.add(Conv2D(54, (3,3), activation='relu', padding='same'))
+# model.add(Conv2D(128, (3,3), activation='relu', padding='same'))
+# model.add(Dropout(0.25))
+# model.add(UpSampling2D((2, 2)))
+# model.add(Conv2D(26, (3,3), activation='relu', padding='same',dilation_rate=(2,2)))
+# # model.add(BatchNormalization())
+
+# model.add(Conv2D(11, (3,3), activation='relu', padding='same',dilation_rate=(2,2)))
+
+# model.add(Conv2D(2, (3, 3), activation='tanh', padding='same'))
+# model.add(UpSampling2D((2, 2)))
+# model.add(BatchNormalization())
+
+###################################################### MODEL 2 ###################################################
+# model.add(Conv2D(64,(3,3),strides=2,activation='relu',padding='same',input_shape=(256,256,1)))
+# model.add(Conv2D(64,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(Conv2D(64,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(BatchNormalization())
+
+# #Conv2 
+# model.add(Conv2D(128,(3,3),strides=2,activation='relu',padding='same'))
+# model.add(Conv2D(128,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(Conv2D(128,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(BatchNormalization())
+
+# #conv3
+# model.add(Conv2D(256,(3,3),strides=2,activation='relu',padding='same'))
+# model.add(Conv2D(256,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(Conv2D(256,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(BatchNormalization())
+
+
+# #Conv4
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(BatchNormalization())
+
+
+# #conv5
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same',dilation_rate=(2,2)))
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same',dilation_rate=(2,2)))
+# model.add(BatchNormalization())
+
+
+# #conv6
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same',dilation_rate=(2,2)))
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same',dilation_rate=(2,2)))
+# model.add(BatchNormalization())
+
+# #conv7
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(Conv2D(512,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(BatchNormalization())
+
+
+# #conv8
+# model.add(UpSampling2D((2,2)))
+# model.add(Conv2D(128,(3,3),strides=1,activation='relu',padding='same'))
+# model.add(Conv2D(2,(3,3),strides=1,activation='tanh',padding='same'))
+# model.add(UpSampling2D((2,2)))
+# model.add(UpSampling2D((2,2)))
+
+#####################################################################################################################
+model = tf.keras.models.load_model('other_files/colorize_autoencoder2.model',
+								   custom_objects=None,
+								   compile=True)
 model.summary()
 
 model.compile(loss='mse',metrics=["accuracy"],optimizer=Adam(lr=0.0001,beta_1=0.9,beta_2=0.999,decay=0,epsilon=1e-8))
-# c_train = ct.CustomFit(model)
-# c_train.compile(loss='mse',metrics=["accuracy"],optimizer='adam')
-# c_train.fit(ds_train,epochs=2,batch_size=32)
+# # c_train = ct.CustomFit(model)
+# # c_train.compile(loss='mse',metrics=["accuracy"],optimizer='adam')
+# # c_train.fit(ds_train,epochs=2,batch_size=32)
 
-model.fit(ds_train,epochs=100,steps_per_epoch=len(train_data)//BATCH_SIZE)
+model.fit(ds_train,epochs=10,steps_per_epoch=num_train//BATCH_SIZE,validation_data=ds_test,validation_steps=num_test//BATCH_SIZE)
 
 # acc_metric = keras.metrics.Accuracy()
 # epochs = 10

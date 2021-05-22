@@ -11,19 +11,28 @@ from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 import datasetPreparation as dp 
 import testDataGenerator as tdg
-config = ConfigProto()
-config.gpu_options.allow_growth = True
-session = InteractiveSession(config=config)
-
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=3048)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
 
 
 model = tf.keras.models.load_model('other_files/colorize_autoencoder2.model',
 								   custom_objects=None,
 								   compile=True)
-csv_filename = 'filenames_test.csv'
-filenames = dp.load_samples(csv_filename)
-num_files = len(filenames)
-print(num_files)
+model.compile(loss='mse',metrics=["accuracy"],optimizer='adam')
+# csv_filename = 'filenames_test.csv'
+# filenames = dp.load_samples(csv_filename)
+# num_files = len(filenames)
+# print(num_files)
 
 # ds_test = tdg.generator(filenames,batch_size=18)
 
@@ -45,7 +54,7 @@ def colorize(img_path,saveFile):
 		#print(img1_color.shape)
 		output1 = model.predict(img1_color)
 		output1=output1*128
-		output1=output1+0.38
+		output1=output1+5.38
 		if output1.shape[1:2] != img1.shape[:2]:
 			output1 = tf.image.resize(output1,img1.shape[:2],method='bicubic')
 

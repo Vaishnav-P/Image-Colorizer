@@ -12,7 +12,7 @@ from sklearn.utils import shuffle
 
 from keras.utils import np_utils
 
-path_test = r'images/validation/'
+path_test = r'images/colorization/color/'
 
 def preparecsv(path):
 
@@ -31,6 +31,6 @@ def preparecsv(path):
 
 		train_df = train_df.append({'Filename':img_filename},ignore_index=True)	
 
-	train_df.to_csv('other_files/filenames_test.csv')
+	train_df.to_csv('other_files/filename.csv')
 
 preparecsv(path_test)
