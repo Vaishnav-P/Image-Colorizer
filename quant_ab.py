@@ -15,7 +15,7 @@ path_test = 'images/validation/'
 csv_file1 = r'filenames_test.csv'
 test_data = dp.load_samples(csv_file1)
 num_test = len(test_data)
-BATCH_SIZE=1000
+BATCH_SIZE=100
 ds_test = dp.generator(test_data,batch_size=BATCH_SIZE)
 a = []
 b =[]
@@ -36,7 +36,7 @@ a = a.ravel()
 b = b.ravel()
 ab = np.vstack((a,b)).T
 #np.arange(-110,120,10)
-hist,x,y = np.histogram2d(ab[:,0],ab[:,1],bins=20)
+hist,x,y = np.histogram2d(ab[:,0],ab[:,1],bins=[np.arange(-110,120,10),np.arange(-110,120,10)])
 # plt.xlim([-110, 110])
 # plt.ylim([-110, 110])
 plt.imshow(hist,cmap='plasma',interpolation='nearest')
@@ -46,29 +46,25 @@ print(y)
 print(hist.shape)
 # plt.clf()
 # plt.close()
-cord = []
-count=0
-shape = hist.shape
-shape_x = shape[0]
-shape_y = shape[1]
-for i in range(shape_x):
-	for j in range(shape_y):
-		if hist[i][j] > 0:
-			print(hist[i][j])
-			cord.append([i,j])
+# cord = []
+# count=0
+# shape = hist.shape
+# shape_x = shape[0]
+# shape_y = shape[1]
+# for i in range(shape_x):
+# 	for j in range(shape_y):
+# 		if hist[i][j] > 0:
+# 			print(hist[i][j])
+# 			cord.append([i,j])
 
-print(cord)
-print(len(cord))
-print(hist)
+# print(cord)
+# print(len(cord))
+# print(hist)
+binCentersX = np.sqrt(x[1:]*x[:-1])
+print(binCentersX)
+binCentersY = np.sqrt(y[1:]*y[:-1])
+print(binCentersY)
 
-
-# for k in hist[:0]:
-# 	for q in k:
-# 		if q > 0:
-# 			count+=1
-# 			print(q)
-
-# print(count)
 
 # for k in hist[:]:
 # 	for q in k:

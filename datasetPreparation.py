@@ -19,7 +19,7 @@ def preProcessing(img):
 	rot = iaa.Affine(rotate=(-25,25))
 	img = rot.augment_image(img)
 	lab = rgb2lab(img)
-	return (lab[:,:,0],lab[:,:,1:])
+	return (lab[:,:,0],lab[:,:,1:]/128)
 
 def load_samples(csv_file):
 

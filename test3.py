@@ -16,7 +16,7 @@ import keras
 X = []
 for filename in os.listdir('images/colorization/color/'):
     X.append(img_to_array(load_img('images/colorization/color/'+filename)))
-X = np.array(X, dtype=float)
+X = np.array(X)
 Xtrain = 1.0/255*X
 
 #Load weights

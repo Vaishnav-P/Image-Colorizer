@@ -71,7 +71,7 @@ class Main(QtWidgets.QMainWindow):
 
 		fname = QFileDialog.getOpenFileName(self,'Browse','..')
 		self.ui.input1.setText(fname[0])
-
+		self.ui.label_5.setPixmap(QtGui.QPixmap(fname[0]))
 	def colorize(self):
 		
 		saveFile = self.ui.input2.text()
@@ -94,6 +94,7 @@ class Main(QtWidgets.QMainWindow):
 				msg.setText("Error!")
 				msg.setIcon(QMessageBox.Critical)
 				x = msg.exec_()
+		self.ui.label_5.setPixmap(QtGui.QPixmap("/home/vaishnav/Desktop/"+saveFile+".jpg"))
 
 	def increment(self,*args):
 		for i in range(100):
